@@ -20,11 +20,16 @@ A feature-enriched dictionary.
 ```python
 from dictkit import UtilDict
 
-# Initialize UtilDict with a variety of types
+# Like a dictionary...
+ud = UtilDict(a=1, b=2, c=3)
+print(ud)  # {'a': 1, 'b': 2, 'c': 3}
+
+# ... but can be initialized from a variety of types
 ud = UtilDict({"a": 1}, [("b", 2)], c=3)
 print(ud)  # {'a': 1, 'b': 2, 'c': 3}
 
-# Dot notation access
+# Supports dot notation access
+print(ud['a'])  # 1
 print(ud.a)  # 1
 
 # Get multiple items at once

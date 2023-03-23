@@ -4,12 +4,17 @@ from collections import ChainMap
 from typing import overload, Iterable, Mapping, TypeVar
 from copy import copy
 
-PANDAS_AVAILABLE = "pandas" in sys.modules
+
+PANDAS_AVAILABLE = "pandas" in sys.modules  # Checks if imported already
 if PANDAS_AVAILABLE:
     from pandas import DataFrame, Series
 
 
 def is_valid_normal_iterable(item) -> bool:
+    """
+    Returns True if the average human would say, "Yes, that looks like a
+    regular iterable to me"
+    """
     if not isinstance(item, Iterable):
         return False
     if isinstance(item, Mapping):
@@ -19,8 +24,10 @@ def is_valid_normal_iterable(item) -> bool:
     return True
 
 
+# Key-value types of current object
 K = TypeVar("K")
 V = TypeVar("V")
+# Key-value types of external arguments passed in
 K2 = TypeVar("K2")
 V2 = TypeVar("V2")
 
@@ -304,7 +311,7 @@ class UtilDict(dict[K, V]):
         except Exception:
             pass
 
-        if is_valid_normal_iterable(arg) and hasattr(arg, '__len__'):
+        if is_valid_normal_iterable(arg) and hasattr(arg, "__len__"):
             elems = list(arg)
             if len(elems) == 2:
                 if all(is_valid_normal_iterable(a) for a in elems):
