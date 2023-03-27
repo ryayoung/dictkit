@@ -4,10 +4,20 @@ from collections import ChainMap
 from typing import overload, Iterable, Mapping, TypeVar
 from copy import copy
 
+if "pandas" in sys.modules:
+    # If pandas is already imported, we can speed up our code by never checking anymore
+    import pandas
 
-PANDAS_AVAILABLE = "pandas" in sys.modules  # Checks if imported already
-if PANDAS_AVAILABLE:
-    from pandas import DataFrame, Series
+    def get_pandas():  # type:ignore
+        return pandas
+
+else:
+
+    def get_pandas():
+        if "pandas" in sys.modules:
+            import pandas
+
+            return pandas
 
 
 def is_valid_normal_iterable(item) -> bool:
@@ -36,7 +46,8 @@ class UtilDict(dict[K, V]):
     """
     A better dictionary. Allows getting, setting, adding, and dropping items in useful ways,
     supporting dot notation item access, and getting/setting multiple keys and values at once.
-    ----
+
+    Renders in nested-json style structure, while maintaining default Python value formatting.
 
     Get items with dot notation, if you wish
 
@@ -66,10 +77,23 @@ class UtilDict(dict[K, V]):
 
     GPT-4 came up with and wrote all of these, given nothing other than the source code
 
-    Initialize with a variety of types
+    It works just like a normal dictionary at first.
+    >>> sd = UtilDict(a=1,b=2,c=3)
+    >>> sd
+    {
+       'a': 1,
+       'b': 2,
+       'c': 3
+    }
+
+    But can initialize with a variety of types
     >>> sd = UtilDict({"a": 1}, [("b", 2)], c=3)
     >>> sd
-    {'a': 1, 'b': 2, 'c': 3}
+    {
+       'a': 1,
+       'b': 2,
+       'c': 3
+    }
 
     Dot notation access
     >>> sd = UtilDict(a=1, b=2, c=3)
@@ -80,25 +104,42 @@ class UtilDict(dict[K, V]):
     >>> sd = UtilDict(a=1, b=2, c=3)
     >>> selected_items = sd[["a", "c"]]
     >>> selected_items
-    {'a': 1, 'c': 3}
+    {
+       'a': 1,
+       'c': 3
+    }
 
     Set multiple items at once
     >>> sd = UtilDict(a=1, b=2, c=3)
     >>> sd[["a", "c"]] = 10, 30
     >>> sd
-    {'a': 10, 'b': 2, 'c': 30}
+    {
+       'a': 10,
+       'b': 2,
+       'c': 30
+    }
 
     Set the same value to multiple keys at once
     >>> sd = UtilDict(a=1, b=2, c=3)
     >>> sd[["a", "c"]] = 99
     >>> sd
-    {'a': 99, 'b': 2, 'c': 99}
+    {
+       'a': 99,
+       'b': 2,
+       'c': 99
+    }
 
     Add items from a variety of types
     >>> sd = UtilDict(a=1, b=2)
     >>> sd2 = sd.add({"c": 3}, ("d", 4), e=5)
     >>> sd2
-    {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5}
+    {
+       'a': 1,
+       'b': 2,
+       'c': 3,
+       'd': 4,
+       'e': 5
+    }
 
     Add items from a 2-column dataframe
     >>> import pandas as pd
@@ -110,13 +151,21 @@ class UtilDict(dict[K, V]):
     1   d      4
     >>> sd2 = sd.add(df)
     >>> sd2
-    {'a': 1, 'b': 2, 'c': 3, 'd': 4}
+    {
+       'a': 1,
+       'b': 2,
+       'c': 3,
+       'd': 4
+    }
 
     Drop multiple items at once
     >>> sd = UtilDict(a=1, b=2, c=3, d=4)
     >>> sd2 = sd.drop("a", "c")
     >>> sd2
-    {'b': 2, 'd': 4}
+    {
+       'b': 2,
+       'd': 4
+    }
     """
 
     def __init__(self, *args, **kwargs):
@@ -155,9 +204,18 @@ class UtilDict(dict[K, V]):
         --------
         >>> sd = UtilDict(a=1, b=2)
         >>> sd.add(c=3)
-        {'a': 1, 'b': 2, 'c': 3}
+        {
+           'a': 1,
+           'b': 2,
+           'c': 3
+        }
         >>> sd.add({"d": 4}, e=5)
-        {'a': 1, 'b': 2, 'd': 4, 'e': 5}
+        {
+           'a': 1,
+           'b': 2,
+           'd': 4,
+           'e': 5
+        }
         """
         new = self.copy()
 
@@ -196,10 +254,15 @@ class UtilDict(dict[K, V]):
         --------
         >>> sd = UtilDict(a=1, b=2, c=3)
         >>> sd.drop("a")
-        {'b': 2, 'c': 3}
+        {
+           'b': 2,
+           'c': 3
+        }
         >>> sd.drop("b", "c", inplace=True)
         >>> sd
-        {'a': 1}
+        {
+           'a': 1
+        }
         """
         new = self if inplace else self.copy()
 
@@ -222,10 +285,10 @@ class UtilDict(dict[K, V]):
             return super().__setitem__(key, val)
 
         if isinstance(key, type(...)):
-            if PANDAS_AVAILABLE and isinstance(val, DataFrame):
+            if (pd := get_pandas()) and isinstance(val, pd.DataFrame):
                 for c in val:
                     super().__setitem__(c, val[c])
-            elif PANDAS_AVAILABLE and isinstance(val, Series):
+            elif (pd := get_pandas()) and isinstance(val, pd.Series):
                 for k, v in val.to_dict():
                     super().__setitem__(k, v)
             elif isinstance(val, dict):
@@ -237,7 +300,9 @@ class UtilDict(dict[K, V]):
 
         assert isinstance(key, list), type(key)
 
-        if isinstance(val, tuple) or (PANDAS_AVAILABLE and isinstance(val, Series)):
+        if isinstance(val, tuple) or (
+            (pd := get_pandas()) and isinstance(val, pd.Series)
+        ):
             if len(val) == len(key):
                 for k, v in zip(key, val):
                     super().__setitem__(k, v)
@@ -247,12 +312,12 @@ class UtilDict(dict[K, V]):
                 )
             return
 
-        if PANDAS_AVAILABLE and isinstance(val, DataFrame):
+        if (pd := get_pandas()) and isinstance(val, pd.DataFrame):
             if len(val.columns) == len(key):
                 for i, k in enumerate(key):
                     super().__setitem__(k, val[val.columns[i]])
             else:
-                raise ValueError("DataFrame must have same number of columns as key")
+                raise ValueError("pd.DataFrame must have same number of columns as key")
             return
 
         for k in key:
@@ -286,17 +351,17 @@ class UtilDict(dict[K, V]):
 
     def _iterable_to_dict(self, arg) -> dict:
 
-        if PANDAS_AVAILABLE:
-            if isinstance(arg, DataFrame):
+        if pd := get_pandas():
+            if isinstance(arg, pd.DataFrame):
                 if len(arg.columns) == 2:
                     return dict(zip(arg[arg.columns[0]], arg[arg.columns[1]]))
                 if len(arg.columns) == 1:
                     return arg[arg.columns[0]].to_dict()
                 raise ValueError(
-                    "DataFrame must have one or two columns, to make key/val pairs from"
+                    "pd.DataFrame must have one or two columns, to make key/val pairs from"
                 )
 
-            if isinstance(arg, Series):
+            if isinstance(arg, pd.Series):
                 return arg.to_dict()
 
         if isinstance(arg, Mapping):
@@ -328,3 +393,32 @@ class UtilDict(dict[K, V]):
 
         # Ah, so we've got values that aren't valid keys. Use them as values instead lmao
         return {i: self.get(v) for i, v in enumerate(arg)}
+
+    def render(self, **kwargs) -> str:
+        from dictkit.render import render
+
+        return render(self, **kwargs)
+
+    def json(self, indent: int = 2, **kwargs) -> str:
+        import json
+
+        def fmt(dic) -> dict:
+            return {
+                k: v
+                if isinstance(v, (int, float, str, list, tuple))
+                else fmt(v)
+                if isinstance(v, dict)
+                else str(v)
+                for k, v in dic.items()
+            }
+
+        dic = fmt(self)
+        return json.dumps(dic, indent=indent, **kwargs)
+
+    def __repr__(self):
+        return self.render()
+
+
+if __name__ == "__main__":
+    from doctest import testmod
+    testmod()
