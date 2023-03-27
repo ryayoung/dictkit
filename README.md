@@ -59,3 +59,81 @@ print(ud2)  # {'a': 1, 'b': 2, 'c': 3, 'd': 4}
 >>> ud3 = ud2.drop("a", "c")
 >>> print(ud3)  # {'b': 2, 'd': 4}
 ```
+
+---
+
+<br>
+
+## `render()`
+
+> Somehow, this tool does not yet exist from any popular libraries.
+
+### Represents iterables in nested **JSON _structure_**, but with **Python _formatting_**.
+
+```py
+>>> from dictkit.render import render
+>>> dct = {'a':1, 'b': {'c':3}, 'list': [int,'b']}
+>>> s = render(dct)
+>>> s
+{
+   'a': 1,
+   'b': {
+      'c': 3
+   },
+   'list': [
+      <class 'int'>,
+      'b'
+   ]
+}
+```
+
+### It handles multiline-formatted strings (like dataframes) elegantly, maintaining their original appearance.
+
+```py
+>>> from pandas import DataFrame
+>>> df = DataFrame([[1, 2, 3], [4, 55, 6]],
+...                columns=["ONE", "TWO", "THREE"])
+>>> fmt_str = '''|------|
+... |      |
+... |------|'''
+>>> dct = {
+...     "key": "value",
+...     "formatted string": fmt_str,
+...     "nested dct": {
+...         "x": "y",
+...         "dataframe": df,
+...         "a": "b",
+...         "formatted string": fmt_str
+...     },
+...     "lst": ['a', 'b'],
+...     "tple": ('a','b')
+... }
+>>> render(dct, quote=False)
+{
+   key: value,
+   formatted string:
+      |------|
+      |      |
+      |------|,
+   nested dct: {
+      x: y,
+      dataframe:
+            ONE  TWO  THREE
+         0    1    2      3
+         1    4   55      6,
+      a: b,
+      formatted string:
+         |------|
+         |      |
+         |------|
+   },
+   lst: [
+      a,
+      b
+   ],
+   tple: (
+      a,
+      b
+   )
+}
+```
