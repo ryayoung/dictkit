@@ -7,13 +7,15 @@ features, with a focus on flexibility and user experience.
 
 A feature-enriched dictionary.
 
-- Access items with dot notation.
-- Flexible subscripting:
+- Access items with **dot notation**.
+- **Flexible subscripting**:
     - Get multiple items at once.
     - Set multiple items or the same value to multiple items at once.
-- Add items without mutating - return an updated copy
-- Drop items without mutating - return a filtered copy
-- Accept a variety of positional argument types at creation, such as other dictionaries, 2-column dataframes, series, or other iterables
+- **Add items** without mutating - return an updated copy
+- **Drop items** without mutating - return a filtered copy
+- Accepts a **variety of argument types** at creation.
+- Displays in **nested format** when printed.
+- Easy **conversion to json** format with `.json()`
 
 ### Examples
 
