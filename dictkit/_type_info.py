@@ -6,6 +6,7 @@ import contextlib
 import re
 
 TypeInfo = collections.namedtuple("TypeInfo", ["cls", "type", "origin", "has_args", "cls_is_type", "kind", "type_when_params", "th_1", "th_2", "th_3"])
+# TypeInfo = collections.namedtuple("TypeInfo", ["kind", "cls", "type", "origin", "has_args", "is_type", "is_meta", "is_hintable_cls", "is_BaseGenericAlias", "is_SpecialGenericAlias", "is_Final", "type_when_params", "th_1", "th_2", "th_3"])
 
 
 type_data = {
