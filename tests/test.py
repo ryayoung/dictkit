@@ -28,6 +28,60 @@ import re
 import inspect
 
 
+CANT_CHECK = {
+    typing.NoReturn,
+    typing.Final,
+    typing.ClassVar,
+    typing.TypeVar,
+    typing.TypeAlias,
+    typing.ParamSpec,
+    typing.ParamSpecArgs,
+    typing.ParamSpecKwargs,
+    typing.Protocol,
+    typing.SupportsAbs,
+    typing.SupportsBytes,
+    typing.SupportsComplex,
+    typing.SupportsFloat,
+    typing.SupportsIndex,
+    typing.SupportsInt,
+    typing.SupportsRound,
+    types.DynamicClassAttribute,
+    types.SimpleNamespace,
+    typing.Unpack,
+    typing.Any,
+    typing.Annotated,
+    typing.Concatenate,  # type:ignore
+    typing.LiteralString,
+    typing.Never,
+    typing.Self,  # type:ignore
+    typing._Final,  # type:ignore
+    typing._GeneratorWrapper,  # type:ignore
+    typing._PickleUsingNameMixin,  # type:ignore
+    typing._Immutable,  # type:ignore
+    typing._NotIterable,  # type:ignore
+    typing._TypingEllipsis,  # type:ignore
+    typing._SpecialForm,
+    typing._BaseGenericAlias,  # type:ignore
+    typing._BoundVarianceMixin,  # type:ignore
+    typing._DeprecatedType,  # type:ignore
+    typing._GenericAlias,  # type:ignore
+    typing._SpecialGenericAlias,  # type:ignore
+    typing._CallableType,  # type:ignore
+    typing._TupleType,  # type:ignore
+    typing._TypedDictMeta,  # type:ignore
+    typing._AnnotatedAlias,  # type:ignore
+    typing._AnyMeta,  # type:ignore
+    typing._ProtocolMeta,
+    typing._LiteralSpecialForm,  # type:ignore
+    typing._CallableGenericAlias,  # type:ignore
+    typing._ConcatenateGenericAlias,  # type:ignore
+    typing._UnpackGenericAlias,  # type:ignore
+    typing._LiteralGenericAlias,  # type:ignore
+    typing._UnionGenericAlias,  # type:ignore
+    typing._SpecialGenericAlias,  # type:ignore
+}
+
+
 def filtered_members(*filters) -> list[tuple]:
     members = [(a, b, "typing") for a, b in inspect.getmembers(typing)] + [
         (a, b, "types") for a, b in inspect.getmembers(types)
@@ -48,6 +102,7 @@ members = filtered_members(
     lambda x: inspect.isclass(x) or isinstance(x, non_class_types),
     lambda x: not inspect.ismodule(x),
     lambda x: not isinstance(x, _DeprecatedType),
+    lambda x: x not in CANT_CHECK,
 )
 
 members = [
@@ -191,6 +246,14 @@ def get_not_null(row):
 def is_sc(tp):
     return lambda x: issubclass(x, tp) if isinstance(x, type) else False
 
+def instcheck(row):
+    try:
+        isinstance(5, row.cls)
+        return True
+    except Exception:
+        return False
+
+
 def tp_no_instcheck(row):
     if row.is_type == False:
         return False
@@ -217,9 +280,8 @@ df["type_when_params"] = (
     .fillna(False)
 )
 
-print(isinstance(['hi'], Iterable[str]))
-quit()
 
+df['instcheck'] = df.apply(instcheck, axis=1)
 df['tp_no_instcheck'] = df.apply(tp_no_instcheck, axis=1)
 df['no_tp_but_instcheck'] = df.apply(no_tp_but_instcheck, axis=1)
 
@@ -244,6 +306,7 @@ df = df[
         "is_type",
         'type_bases',
         'is_meta',
+        'instcheck',
         'is_hintable_cls',
         'tp_no_instcheck',
         'no_tp_but_instcheck',
@@ -257,7 +320,7 @@ df = df[
     ]
 ]
 # print(df[df.type_when_params == False])
-print(df[['cls_name','type_name','origin_name','type_bases','is_type','is_meta', 'type_when_params','is_hintable_cls', 'tp_no_instcheck', 'no_tp_but_instcheck']])
+print(df[['cls_name','type_name','has_args', 'type_when_params','is_hintable_cls', 'instcheck', 'tp_no_instcheck', 'no_tp_but_instcheck']])
 quit()
 # df = df.drop(columns=['origin', 'type', 'cls_name',])
 
