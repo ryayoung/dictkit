@@ -1,8 +1,8 @@
 from __future__ import annotations
 import re
-from typing import Any, Literal
+from typing import Any, Literal, Union, List, Dict, Tuple, Optional
 
-QuoteOption = bool | Literal["keys"] | Literal["values"]
+QuoteOption = Union[bool, Literal["keys"], Literal["values"]]
 
 def render(
     obj, indent: int = 3, quote: QuoteOption = True, line_spacing=1, shift=" "
@@ -196,15 +196,15 @@ def render(
         from_dict = True if isinstance(val, dict) else False
         rendered_items = "".join(
             [_render(k, v, ind + indent, from_dict=from_dict) for k, v in items]
-        ).removesuffix(",")
+        ).rstrip(",")
 
         return s + rendered_items + end
 
     from_dict = True if isinstance(obj, dict) else False
-    return FormattedReprStr(_render("", obj, 0, "", from_dict=from_dict).lstrip("\n").removesuffix(","))
+    return FormattedReprStr(_render("", obj, 0, "", from_dict=from_dict).lstrip("\n").rstrip(","))
 
 
-def get_enclosure(obj) -> tuple[str, str]:
+def get_enclosure(obj) -> Tuple[str, str]:
     if isinstance(obj, list):
         return ("[", "]")
     if isinstance(obj, tuple):

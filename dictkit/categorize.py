@@ -1,12 +1,16 @@
 import pandas as pd
 from collections import namedtuple
+from typing import (
+    List,
+    Union,
+)
 
 from dictkit import UtilDict
 
 
 def categorize(
     df: pd.DataFrame,
-    by: str | list[str | list[str]],
+    by: Union[str, List[Union[str, List[str]]]],
     drop: bool = False,
     reset_index: bool = True,
     sort_keys: bool = False,
@@ -302,17 +306,17 @@ def categorize(
     return res
 
 
-# if __name__ == "__main__":
-#
-#     from dictkit import UtilDict
-#     df = pd.DataFrame(
-#         zip(
-#             ['red'] * 6 + ['gray'] * 6,
-#             ['steak'] * 3 + ['salmon'] * 3 + ['tilapia'] * 3 + ['beef'] * 3,
-#             pd.concat([pd.Series([x] * 2) for x in ['new york', 'vermont', 'kansas', 'florida', 'michigan', 'ohio']]),
-#             list(range(0,12)),
-#             [53,298,2,423,8989,3284,342,2344,2390,243,234,23],
-#         ),
-#         columns=['color','meat','state','ID', 'sales']
-#     )
-#     print(categorize(df, by=['color','meat'], drop=True))
+if __name__ == "__main__":
+
+    from dictkit import UtilDict
+    df = pd.DataFrame(
+        zip(
+            ['red'] * 6 + ['gray'] * 6,
+            ['steak'] * 3 + ['salmon'] * 3 + ['tilapia'] * 3 + ['beef'] * 3,
+            pd.concat([pd.Series([x] * 2) for x in ['new york', 'vermont', 'kansas', 'florida', 'michigan', 'ohio']]),
+            list(range(0,12)),
+            [53,298,2,423,8989,3284,342,2344,2390,243,234,23],
+        ),
+        columns=['color','meat','state','ID', 'sales']
+    )
+    print(categorize(df, by=['color','meat'], drop=True))
