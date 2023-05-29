@@ -1,5 +1,5 @@
 from __future__ import annotations
-from collections import ChainMap
+from collections import ChainMap, abc
 from typing import (
     overload,
     Iterable,
@@ -372,8 +372,7 @@ class UtilDict(Dict[K, V]):
         except Exception:
             pass
 
-        # Ah, so we've got values that aren't valid keys. Use them as values instead lmao
-        return {i: self.get(v) for i, v in enumerate(arg)}
+        raise ValueError(f"Could not convert arg to dict: {arg}")
 
     def render(self, **kwargs) -> str:
         from dictkit.render import render
@@ -383,18 +382,21 @@ class UtilDict(Dict[K, V]):
     def json(self, indent: int = 2, **kwargs) -> str:
         import json
 
-        def fmt(dic) -> dict:
-            return {
-                k: v
-                if isinstance(v, (int, float, str, list, tuple))
-                else fmt(v)
-                if isinstance(v, dict)
-                else str(v)
-                for k, v in dic.items()
-            }
+        def format(obj: Any) -> Any:
 
-        dic = fmt(self)
-        return json.dumps(dic, indent=indent, **kwargs)
+            is_serializable_scalar = isinstance(obj, (int, float, str, bool)) or obj is None
+
+            if is_serializable_scalar:
+                return obj
+            if isinstance(obj, (list, tuple)):
+                return [format(item) for item in obj]
+            if isinstance(obj, abc.Mapping):
+                return {k: format(v) for k, v in obj.items()}
+
+            return str(obj)
+
+        formatted_obj = format(self)
+        return json.dumps(formatted_obj, indent=indent, **kwargs)
 
     def __repr__(self):
         return self.render()
