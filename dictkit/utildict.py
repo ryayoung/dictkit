@@ -1,6 +1,17 @@
 from __future__ import annotations
 from collections import ChainMap, abc
-from typing import Any, overload, Iterable, Mapping, TypeVar, Literal
+from typing import (
+    overload,
+    Iterable,
+    Mapping,
+    TypeVar,
+    Literal,
+    Optional,
+    Union,
+    Dict,
+    List,
+    Any,
+)
 from copy import copy
 
 
@@ -26,7 +37,7 @@ K2 = TypeVar("K2")
 V2 = TypeVar("V2")
 
 
-class UtilDict(dict[K, V]):
+class UtilDict(Dict[K, V]):
     """
     A better dictionary. Allows getting, setting, adding, and dropping items in useful ways,
     supporting dot notation item access, and getting/setting multiple keys and values at once.
@@ -147,8 +158,8 @@ class UtilDict(dict[K, V]):
         super().__init__(*args, **kwargs)
 
     def add(
-        self, *args: Mapping[K2, V2] | Iterable, **kwargs: V2
-    ) -> UtilDict[K | K2, V | V2]:
+        self, *args: Union[Mapping[K2, V2], Iterable], **kwargs: V2
+    ) -> UtilDict[Union[K, K2], Union[V, V2]]:
         """
         Add items, returning a copy with the new items.
 
@@ -242,14 +253,16 @@ class UtilDict(dict[K, V]):
             return new
 
     @overload
-    def deep_uniform(self, reverse: Literal[False]) -> UtilDict[K, V]:
+    def deep_uniform(self, reverse: Optional[Literal[False]] = False) -> UtilDict[K, V]:
         ...
 
     @overload
-    def deep_uniform(self, reverse: Literal[True]) -> dict:
+    def deep_uniform(self, reverse: Literal[True]) -> Dict:
         ...
 
-    def deep_uniform(self, reverse=False):
+    def deep_uniform(
+        self, reverse: Optional[Literal[True, False]] = False
+    ) -> Union[UtilDict[K, V], Dict]:
         """
         Recursively convert all child instances of `dict` to
         Self's type.
@@ -310,7 +323,7 @@ class UtilDict(dict[K, V]):
         ...
 
     @overload
-    def __getitem__(self, key: list[K]) -> UtilDict[K, V]:
+    def __getitem__(self, key: List[K]) -> UtilDict[K, V]:
         ...
 
     def __getitem__(self, key):
