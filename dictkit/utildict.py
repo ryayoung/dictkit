@@ -346,10 +346,10 @@ class UtilDict(Dict[K, V]):
 
     def _iterable_to_dict(self, arg) -> dict:
 
-        if isinstance(arg, Mapping):
+        if isinstance(arg, abc.Mapping):
             return dict(arg)
 
-        if not isinstance(arg, Iterable):
+        if not isinstance(arg, abc.Iterable):
             # Let dict throw the error if not hashable
             return {arg: self.get(arg)}
 
@@ -385,7 +385,9 @@ class UtilDict(Dict[K, V]):
 
         def format(obj: Any) -> Any:
 
-            is_serializable_scalar = isinstance(obj, (int, float, str, bool)) or obj is None
+            is_serializable_scalar = (
+                isinstance(obj, (int, float, str, bool)) or obj is None
+            )
 
             if is_serializable_scalar:
                 return obj

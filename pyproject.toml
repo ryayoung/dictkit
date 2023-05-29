@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dictkit"
-version = "0.1.5"
+version = "0.1.6"
 python_requires = ">=3.8"
 description = "Utility data structures with simple but powerful features."
 authors = [
